@@ -1,3 +1,5 @@
+<img src="http://doctypestudios.com/PMAP/SimpleBot.jpg" />
+
 # RockeMap-BasicBot
 This is a simple webhook modification, along with a simple-n-single file bot, and 
 also using 2 external files for Pokemon Name, and Pokemon Movesets
