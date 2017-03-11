@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 const bot = new Discord.Client();
 const pokemon = require("./files/p-pokemon.json");
 const moves = require("./files/p-moves.json");
-const token = 'MjgzNjUzOTk1Nzg2OTI4MTI5.C44M4w.iOVZHG85sGwptnYshOIkKaYFnDY';
+const token = 'BOT_TOKEN';
 
 
 bot.on('ready', () => {
