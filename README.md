@@ -29,7 +29,7 @@ Using command promp or bash: node SimpleBot.js
 Optional: you can install pm2 to have it run in the background
 
 # PM2:
-PM2 allowes you to run processes in the background, you can access PM2 from anywhere, but for a process to start it needs to come from the folder where the file is.
+PM2 allows you to run processes in the background, you can access PM2 from anywhere, but for a process to start it needs to come from the folder where the file is.
 npm install pm2 -g
 pm2 start SimpleBot.js
 
