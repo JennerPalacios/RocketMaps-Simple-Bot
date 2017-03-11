@@ -6,7 +6,7 @@ const token = 'BOT_TOKEN';
 
 
 bot.on('ready', () => {
-	console.log('-- Seattle BOT IS READY --');console.log(console.error);
+	console.log('-- BOT IS READY --');console.log(console.error);
 });
 
 
