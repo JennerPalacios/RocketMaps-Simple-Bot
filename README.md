@@ -19,7 +19,6 @@ Third, Modify the bot files and input the right information - ie: bot token, cha
 
 2) Discord.js (npm install discord.js) 
 
-3) Bot Token: https://finitereality.github.io/permissions/?v=0 
+3) Bot Token: https://discordapp.com/developers/applications/me  
 
--No token? create a bot here: https://discordapp.com/developers/applications/me 
--And assign it to your server: https://finitereality.github.io/permissions/?v=0
+4) And assign bot access to your server: https://finitereality.github.io/permissions/?v=0
