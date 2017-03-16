@@ -226,10 +226,10 @@ def send_to_webhook(session, message_type, message):
 #########################################################
 # CHECK FOR INDIVIDUAL ATTACK TO MAKE SURE POKEMON IS
 # BEING ENCOUNTERED, AND THERE IS DATA TO KEEP GOING FORWARD
-# AND CALCULATE IV, IF NO DATA, IV = -1, WILL NOT POST
+# AND CALCULATE IV, IF NO DATA, IV = 0, WILL NOT POST
 #########################################################
     indatk = message.get("individual_attack")
-    iv = parseInt(-1)
+    iv = 0
     if indatk:
         iv = ((int(message["individual_attack"]) + int(message["individual_defense"]) + int(message["individual_stamina"])) * 100) / 45
     
