@@ -242,7 +242,7 @@ def send_to_webhook(session, message_type, message):
         return
 
 #########################################################
-# FORMAT INFORMATION AS JSON, ADD IT TO DATA ('conent': jsonMessage,)
+# FORMAT INFORMATION AS JSON, ADD IT TO DATA ('content': jsonMessage,)
 #########################################################
     jsonMessage = json.dumps(message)
 
