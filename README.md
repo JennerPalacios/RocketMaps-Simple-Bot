@@ -26,7 +26,7 @@ Third, Modify the bot files and input the right information - ie: bot token, cha
 4) And assign bot access to your server: https://finitereality.github.io/permissions/?v=0
 
 # LAUNCHING IT:
-Using command promp or bash: node SimpleBot.js
+Using command prompt or bash: node SimpleBot.js
 
 -You close that window, the bot connection is terminated
 
