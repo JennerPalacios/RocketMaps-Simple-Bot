@@ -10,7 +10,9 @@ from .utils import get_args
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
-# spm - import json to handle stuff
+#########################################################
+# IMPORT JSON TO HANDLE MESSAGES 
+#########################################################
 import json
 
 log = logging.getLogger(__name__)
