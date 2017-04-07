@@ -14,6 +14,7 @@ var discordUnfilteredChannel = new Discord.WebhookClient('WEBHOOK_ID_HERE', 'WEB
 	
 // EVENT LISTENER
 bot.on('message', message => {
+	if(!message.content.startsWith('{')) return;	
 	
 	// SAVE THIS CHANNEL INFO
 	var channel = message.channel.name;
@@ -83,6 +84,17 @@ bot.on('message', message => {
 				'text': pokeQuick+'/'+pokeLoad+'\nUntil '+dispawnTime+' ('+pmins+'m '+psecs+'s)\n\n(`posted at '+timeStamp+'`)'
 			}]
 		};
+		
+		// SEND ALL POKEMON TO UNFILTERED FEED
+		discordUnfilteredChannel.sendSlackMessage(SlackMsg).catch(console.error);
+		
+		// CUSTOM FEED FOR CUSTOM CHANNEL
+		// ### IV 80+ ###
+		// lapras: 131 , snorlax: 143, dratini: 147, dragonair: 148, dragonite: 149, eevee: 133,
+		// larvitar: 246, pupitar: 247, tyranitar: 248, mareep: 179, flaffy: 180, ampharos: 181, 
+		
+		// ### IV 0 ###
+		// chansey: 113, unown: 201, blisey: 242, porygon: 137
 		if(pokie===131 || pokie===143 || pokie===147 || pokie===148 || pokie===149 || pokie===246 || pokie===247 || pokie===248 || 
 			pokie===179 || pokie===180 || pokie===181 || pokie===113 || pokie===201 || pokie===242 || pokie===137 || pokie===133) {
 			
@@ -107,10 +119,6 @@ bot.on('message', message => {
 			if (sendit==="yes") { 
 				return discordRareChannel.sendSlackMessage(SlackMsg).catch(console.error);
 			}
-		}
-		// SEND ALL POKEMON TO UNFILTERED CHANNEL
-		else {
-			return discordUnfilteredChannel.sendSlackMessage(SlackMsg).catch(console.error);
 		}
 	}	
 });
