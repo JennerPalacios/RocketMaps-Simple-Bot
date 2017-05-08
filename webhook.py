@@ -4,6 +4,7 @@
 import logging
 import requests
 from datetime import datetime
+from cachetools import LFUCache
 from requests_futures.sessions import FuturesSession
 import threading
 from .utils import get_args
@@ -20,6 +21,7 @@ wh_warning_threshold = 100
 wh_threshold_lifetime = int(5 * (wh_warning_threshold / 100.0))
 wh_lock = threading.Lock()
 
+args = get_args()
 
 #########################################################
 # CREATE DEFAULT FILTER TO SKIP CERTAIN POKEMONS
@@ -29,133 +31,136 @@ wh_lock = threading.Lock()
 globalDefault = 100
 globalFilter = {
 1: 90,
-2: 90,
-3: 80,
-4: 90,
-5: 90,
-6: 80,
-7: 90,
-8: 90,
-9: 80,
+2: 80,
+3: 50,
+4: 80,
+5: 80,
+6: 50,
+7: 80,
+8: 80,
+9: 50,
 25: 90,
-26: 80,
-31: 80,
-34: 80,
-35: 95,
-37: 95,
-38: 80,
-39: 95,
+26: 90,
+31: 90,
+34: 90,
+35: 90,
+36: 90,
+37: 90,
+38: 50,
+39: 90,
+40: 90,
 43: 90,
-44: 90,
-45: 80,
-58: 95,
+44: 80,
+45: 50,
+56: 90,
+57: 90,
+58: 90,
 59: 90,
-60: 95,
-61: 95,
-62: 80,
+60: 90,
+61: 90,
+62: 90,
 63: 90,
-64: 90,
-65: 80,
+64: 80,
+65: 50,
 66: 90,
 67: 90,
-68: 80,
+68: 50,
 69: 95,
-70: 95,
+70: 90,
 71: 90,
+72: 95,
+73: 95,
 74: 90,
 75: 90,
-76: 80,
-79: 95,
-80: 90,
-87: 95,
+76: 50,
+77: 90,
+78: 90,
+79: 90,
+80: 80,
+86: 90,
+87: 90,
 88: 0,
 89: 0,
 90: 95,
-91: 95,
+91: 90,
 92: 95,
 93: 95,
-94: 80,
-95: 80,
-102: 80,
+94: 90,
+95: 90,
+102: 90,
 103: 80,
 106: 0,
 107: 0,
-108: 80,
+108: 95,
 111: 90,
 112: 80,
 113: 0,
 114: 0,
 116: 90,
-123: 80,
-125: 80,
-126: 80,
-127: 80,
+117: 90,
+122: 0,
+123: 95,
+124: 95,
+125: 95,
+126: 95,
+127: 95,
 128: 90,
 129: 90,
 130: 80,
 131: 0,
 132: 0,
-133: 90,
-134: 0,
-135: 0,
-136: 0,
+133: 95,
+134: 50,
+135: 50,
+136: 50,
 137: 0,
-138: 80,
-139: 80,
-140: 80,
-141: 80,
-142: 0,
+138: 95,
+139: 90,
+140: 95,
+141: 90,
+142: 90,
 143: 0,
+144: 0,
+145: 0,
+146: 0,
 147: 0,
 148: 0,
 149: 0,
-152: 90,
+150: 0,
+151: 0,
+152: 95,
 153: 90,
-154: 0,
-155: 90,
-156: 90,
-157: 0,
-158: 90,
-159: 90,
-160: 0,
-169: 80,
-170: 90,
-171: 90,
+154: 50,
+155: 80,
+156: 80,
+157: 50,
+158: 80,
+159: 80,
+160: 50,
+169: 90,
 176: 0,
-178: 90,
 179: 0,
 180: 0,
 181: 0,
-182: 0,
-185: 80,
-187: 90,
-188: 90,
-189: 80,
-191: 80,
-192: 80,
-194: 90,
-195: 80,
-200: 90,
+185: 90,
+191: 90,
 201: 0,
-202: 90,
-204: 90,
+204: 80,
 205: 80,
-207: 90,
-209: 95,
-210: 90,
-213: 90,
+209: 90,
+210: 80,
+214: 0,
 215: 90,
 216: 90,
 217: 80,
-224: 80,
-226: 80,
-227: 80,
+226: 95,
+227: 95,
 228: 90,
-229: 80,
+229: 50,
 231: 90,
-232: 80,
-234: 0,
-237: 0,
+232: 50,
+234: 90,
+237: 50,
 241: 0,
 242: 0,
 246: 0,
@@ -169,6 +174,7 @@ globalFilter = {
 def send_to_webhook(session, message_type, message):
     args = get_args()
 
+def send_to_webhook(session, message_type, message):
     if not args.webhooks:
         # What are you even doing here...
         log.warning('Called send_to_webhook() without webhooks.')
@@ -229,7 +235,7 @@ def send_to_webhook(session, message_type, message):
             log.exception(repr(e))
 
 
-def wh_updater(args, queue, key_cache):
+def wh_updater(args, queue, key_caches):
     wh_threshold_timer = datetime.now()
     wh_over_threshold = False
 
@@ -238,28 +244,44 @@ def wh_updater(args, queue, key_cache):
     # connection, giving a performance increase.
     session = __get_requests_session(args)
 
+    # Extract the proper identifier. This list also controls which message
+    # types are getting cached.
+    ident_fields = {
+        'pokestop': 'pokestop_id',
+        'pokemon': 'encounter_id',
+        'gym': 'gym_id',
+        'gym_details': 'gym_id'
+    }
+
+    # Instantiate WH LFU caches for all cached types. We separate the caches
+    # by ident_field types, because different ident_field (message) types can
+    # use the same name for their ident field.
+    for key in ident_fields:
+        key_caches[key] = LFUCache(maxsize=args.wh_lfu_size)
+
     # The forever loop.
     while True:
         try:
             # Loop the queue.
             whtype, message = queue.get()
 
-            # Extract the proper identifier.
-            ident_fields = {
-                'pokestop': 'pokestop_id',
-                'pokemon': 'encounter_id',
-                'gym': 'gym_id'
-            }
+            # Get the proper cache if this type has one.
+            key_cache = None
+
+            if whtype in key_caches:
+                key_cache = key_caches[whtype]
+
+            # Get the unique identifier to check our cache, if it has one.
             ident = message.get(ident_fields.get(whtype), None)
 
             # cachetools in Python2.7 isn't thread safe, so we add a lock.
             with wh_lock:
                 # Only send if identifier isn't already in cache.
-                if ident is None:
-                    # We don't know what it is, so let's just log and send
-                    # as-is.
+                if ident is None or key_cache is None:
+                    # We don't know what it is, or it doesn't have a cache,
+                    # so let's just log and send as-is.
                     log.debug(
-                        'Sending webhook item of unknown type: %s.', whtype)
+                        'Sending webhook item of uncached type: %s.', whtype)
                     send_to_webhook(session, whtype, message)
                 elif ident not in key_cache:
                     key_cache[ident] = message
@@ -279,6 +301,11 @@ def wh_updater(args, queue, key_cache):
                     else:
                         log.debug('Not resending %s to webhook: %s.',
                                   whtype, ident)
+
+            # Helping out the GC.
+            del whtype
+            del message
+            del ident
 
             # Webhook queue moving too slow.
             if (not wh_over_threshold) and (
@@ -350,9 +377,10 @@ def __get_key_fields(whtype):
         'pokemon': ['spawnpoint_id', 'pokemon_id', 'latitude', 'longitude',
                     'disappear_time', 'move_1', 'move_2',
                     'individual_stamina', 'individual_defense',
-                    'individual_attack'],
+                    'individual_attack', 'form', 'cp'],
         'gym': ['team_id', 'guard_pokemon_id',
-                'gym_points', 'enabled', 'latitude', 'longitude']
+                'gym_points', 'enabled', 'latitude', 'longitude'],
+        'gym_details': ['latitude', 'longitude', 'team', 'pokemon']
     }
 
     return key_fields.get(whtype, [])
